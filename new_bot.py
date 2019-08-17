@@ -15,63 +15,254 @@ def new_bot(user_token):
 
     current_shown_dates = {}
     chat_list = []
-    chat_count = len(chat_list)
+    # chat_count = len(chat_list)
     requests = []
     threads = []
-    chat_btns = []
     # bot_info = bot.get_me()
     bot_info = dict()
     bot_info['bot_id'] = str(bot.get_me().id)
     bot_info['bot_username'] = '@' + str(bot.get_me().username)
-    print(bot_info)
+    # print(bot_info)
+    # chat_buttons = []
+
 
     def get_chat_list(message):
         if message.chat.type == "group":
             chat_list.append(message.chat)
         return chat_list
 
+
     def get_chat_list_btns(keyboard):
-        for chat in chat_list:
-            if chat.title not in chat_btns:
-                chat_btns.append(chat.title)
-            callback_button = types.InlineKeyboardButton(text=chat.title,
-                                                         callback_data="CHAT;" + str(chat.id) + ";" + str(chat.title))
-            keyboard.add(callback_button)
+        # for chat in chat_list:
+        #     print(chat_buttons)
+        #
+        #     # chat_count = len(chat_list) - 1
+        #     if len(chat_buttons) == 0:
+        #         chat_buttons.append({})
+        #         chat_count = len(chat_buttons) - 1
+        #         chat_buttons[chat_count]['text'] = chat['chat_title']
+        #         chat_buttons[chat_count]['chat_id'] = str(chat['chat_id'])
+        #         chat_buttons[chat_count]['callback'] = "CHAT;" + str(chat['chat_id']) + ";" + str(chat['chat_title'])
+        #     else:
+        #         for btn in chat_buttons:
+        #
+        #             if chat['chat_title'] not in btn and chat['chat_id'] not in btn:
+        #                 chat_buttons.append({})
+        #                 chat_count = len(chat_buttons) - 1
+        #                 chat_buttons[chat_count]['text'] = chat['chat_title']
+        #                 chat_buttons[chat_count]['callback'] = "CHAT;" + str(chat['chat_id']) + ";" + str(chat['chat_title'])
+        #                 chat_buttons[chat_count]['chat_id'] = str(chat['chat_id'])
+        #
+        # print(chat_buttons)
+
+        if len(chat_list) > 0:
+            for btn in chat_list:
+                callback_button = types.InlineKeyboardButton(text=btn['text'], callback_data=btn['callback'])
+                keyboard.add(callback_button)
+
+
+    def check_requests(requests):
+        for i in range(len(requests)):
+            request = requests[i]
+            try:
+                text = request['text']
+            except:
+                print('check', requests[i])
+                print('checkk', requests)
+                requests.remove(request)
+
 
     @bot.message_handler(commands=['start'])
     def handle_start(message):
         language_code = message.from_user.language_code
         # set_language(language_code)
-        #                     "Если захочешь удалить существующий запрос, используй /delete или кнопку внизу. " \
-        #                     "Если передумал, и хочешь начать заново, напиши /new \n" \
-
+        #                 "Если захочешь удалить существующий запрос, используй /delete или кнопку внизу. " \
+        #                 "Если передумал, и хочешь начать заново, напиши /new \n" \
         hello_msg = "Добавь новые запросы! \n" \
                     "\n" \
-                    "Не забудь убедиться, что я есть и запущен (используй команду /start) " \
+                    "Не забудь убедиться, что я есть " \
                     "в чатах, в которые ты хочешь добавить запрос.\n" \
                     "\n" \
                     "\n" \
                     "Чаты для добавления:"
 
         keyboard = types.InlineKeyboardMarkup()
-        get_chat_list(message)
-
-        # bot_info = bot.get_me()
-        # bot_id =
-        # print(bot_info)
         if message.chat.type == "private":
             get_chat_list_btns(keyboard)
 
-        callback_button = types.InlineKeyboardButton(text="Мои запросы", callback_data="show_req")
-        keyboard.add(callback_button)
-        callback_button = types.InlineKeyboardButton(text="Удалить запросы", callback_data="del_req")
-        keyboard.add(callback_button)
-        bot.send_message(message.chat.id, hello_msg, reply_markup=keyboard)
+            callback_button = types.InlineKeyboardButton(text="Мои рассылки", callback_data="show_reqs")
+            keyboard.add(callback_button)
+            # callback_button = types.InlineKeyboardButton(text="Удалить запросы", callback_data="del_req")
+            # keyboard.add(callback_button)
+            bot.send_message(message.chat.id, hello_msg, reply_markup=keyboard)
 
-    @bot.callback_query_handler(func=lambda call: "CHAT" in call.data)
+
+    @bot.callback_query_handler(func=lambda call: call.data == "start")
+    def handle_start(call):
+        message = call.message
+        language_code = message.from_user.language_code
+        # set_language(language_code)
+        #                 "Если захочешь удалить существующий запрос, используй /delete или кнопку внизу. " \
+        #                 "Если передумал, и хочешь начать заново, напиши /new \n" \
+        hello_msg = "Добавь новые запросы! \n" \
+                    "\n" \
+                    "Не забудь убедиться, что я есть " \
+                    "в чатах, в которые ты хочешь добавить запрос.\n" \
+                    "\n" \
+                    "\n" \
+                    "Чаты для добавления:"
+
+        keyboard = types.InlineKeyboardMarkup()
+        if message.chat.type == "private":
+            get_chat_list_btns(keyboard)
+
+            callback_button = types.InlineKeyboardButton(text="Мои рассылки", callback_data="show_reqs")
+            keyboard.add(callback_button)
+            # callback_button = types.InlineKeyboardButton(text="Удалить запросы", callback_data="del_req")
+            # keyboard.add(callback_button)
+            bot.edit_message_text(hello_msg, call.from_user.id, call.message.message_id, reply_markup=keyboard)
+
+
+    @bot.message_handler(content_types=['new_chat_members'])
+    def get_chats(message):
+        if str(message.new_chat_member.id) == bot_info['bot_id']:
+            chat_id = message.chat.id
+            chat_title = message.chat.title
+            print(chat_title)
+            if len(chat_list) > 0:
+                for chat in chat_list:
+                    if chat['chat_title'] != chat_title and chat['chat_id'] != chat_id:
+                        chat_list.append({})
+                        chat_count = len(chat_list) - 1
+                        chat_list[chat_count]['chat_id'] = str(chat_id)
+                        chat_list[chat_count]['chat_title'] = str(chat_title)
+                        chat_list[chat_count]['text'] = str(chat_title)
+                        chat_list[chat_count]['callback'] = "CHAT;" + str(chat_id) + ";" + str(chat_title)
+            else:
+                chat_list.append({})
+                chat_count = len(chat_list) - 1
+                chat_list[chat_count]['chat_id'] = str(chat_id)
+                chat_list[chat_count]['chat_title'] = str(chat_title)
+                chat_list[chat_count]['text'] = str(chat_title)
+                chat_list[chat_count]['callback'] = "CHAT;" + str(chat_id) + ";" + str(chat_title)
+
+
+    # @bot.message_handler(content_types=[''])
+
+
+    @bot.callback_query_handler(func=lambda call: call.data == "show_reqs")
+    def show_req_list(call):
+        print(requests)
+        show_reqs_message = "Выберите чат, в котором хотите просмотреть рассылки:"
+        markup = types.InlineKeyboardMarkup()
+        btns = []
+        for chat in chat_list:
+            if chat['chat_title'] not in btns:
+                btns.append(chat['chat_title'])
+            callback_button = types.InlineKeyboardButton(text=chat['chat_title'],
+                                                         callback_data="SHOW_REQS_CHAT;" + str(chat['chat_id']) + ";" + str(
+                                                             chat['chat_title']))
+            markup.add(callback_button)
+
+        callback_button = types.InlineKeyboardButton(text="Назад", callback_data='start')
+        markup.add(callback_button)
+        # bot.send_message(call.message.chat.id, show_reqs_message, reply_markup=markup)
+        bot.edit_message_text(show_reqs_message, call.from_user.id, call.message.message_id, reply_markup=markup)
+
+
+    @bot.callback_query_handler(func=lambda call: "SHOW_REQS_CHAT" in call.data)
+    def show_req_in_chat(call):
+        requests_count = len(requests) - 1
+        last_sep = call.data.rfind(';')
+        curr_chat_id = call.data[15:last_sep]
+        # print('curr_chat_id', curr_chat_id)
+        # print('maybe it will be good', call.data[15:last_sep])
+        curr_chat_title = call.data[last_sep + 1:]
+        markup = types.InlineKeyboardMarkup()
+
+        check_requests(requests)
+        # print(requests)
+        print(requests_count)
+        if len(requests) > 0: # and requests_count == 1:
+            curr_chat_title = requests[requests_count]['chat_title'] if curr_chat_id == requests[requests_count][
+                'chat_id'] else ''
+
+            show_req_in_chat = "Рассылки в чате (нажмите на рассылку, чтобы просмотреть): " + curr_chat_title
+            for i in range(len(requests)):
+                request = requests[i]
+                if curr_chat_id == request['chat_id']:
+                    # try:
+                        callback_button = types.InlineKeyboardButton(text=request['text'], callback_data='SHOW_CURR_REQ;' + str(i))
+                        markup.add(callback_button)
+                    # except:
+                    #     show_req_in_chat = "Рассылок в чате " + curr_chat_title + " нет"
+                    #     callback_button = types.InlineKeyboardButton(text="Добавить",
+                    #                                                  callback_data='CHAT;' + str(curr_chat_id) + ';' + str(
+                    #                                                      curr_chat_title))
+                    #     markup.add(callback_button)
+
+            callback_button = types.InlineKeyboardButton(text="Назад", callback_data='show_reqs')
+            markup.add(callback_button)
+            bot.edit_message_text(show_req_in_chat, call.from_user.id, call.message.message_id, reply_markup=markup)
+
+        else:
+
+            show_req_in_chat = "Рассылок в чате " + curr_chat_title + " нет"
+            callback_button = types.InlineKeyboardButton(text="Добавить", callback_data='CHAT;' + str(curr_chat_id) + ';' + str(curr_chat_title))
+            markup.add(callback_button)
+            callback_button = types.InlineKeyboardButton(text="Назад", callback_data='show_reqs')
+            markup.add(callback_button)
+            bot.edit_message_text(show_req_in_chat, call.from_user.id, call.message.message_id, reply_markup=markup)
+
+
+    @bot.callback_query_handler(func=lambda call: "SHOW_CURR_REQ" in call.data)
+    def show_curr_req(call):
+        request_number = int(call.data[14:])
+        print('req_num', request_number)
+        request = requests[request_number]
+        markup = types.InlineKeyboardMarkup()
+        curr_chat_id, curr_chat_title = request['chat_id'], request['chat_title']
+        text, start_date, period, period_opts, time, end_date = request['text'], request['start_date'], request['period'], request['period_opts'], request['time'], request['end_date']
+        weekdays = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+
+        if 'weekdays' in period_opts:
+            for i in range(len(weekdays)):
+                for j in range(len(period)):
+                    period[j] = weekdays[int(period[j])]
+
+        elif 'every' in period_opts:
+            curr_period = period[0]
+
+            if curr_period == '1':
+                period = 'Каждый день'
+            elif curr_period in ['2', '3', '4']:
+                period = 'Каждые ' + curr_period + ' дня'
+            elif curr_period in ['5', '6', '7']:
+                period = 'Каждые ' + curr_period + ' дней'
+            elif curr_period == 'R':
+                period = 'Каждые выходные'
+            elif curr_period == 'W':
+                period = 'Будни'
+
+
+        show_curr_req = 'Текст рассылки: ' + text + '\n'\
+                        'Дата начала рассылки: ' + start_date + '\n' \
+                        'Периодичность рассылки: ' + period + '\n' \
+                        'Время рассылки: ' + time + '\n' \
+                        'Дата окончания рассылки: ' + end_date + '\n'
+
+        callback_button = types.InlineKeyboardButton(text="Удалить", callback_data='DEL_REQ;' + str(request_number))
+        markup.add(callback_button)
+        callback_button = types.InlineKeyboardButton(text="Назад", callback_data='SHOW_REQS_CHAT;' + str(curr_chat_id) + ';' + str(curr_chat_title))
+        markup.add(callback_button)
+        bot.edit_message_text(show_curr_req, call.from_user.id, call.message.message_id, reply_markup=markup)
+
+
+    @bot.callback_query_handler(func=lambda call: "CHAT" in call.data and "SHOW_REQS_CHAT" not in call.data)
     def set_chat(call):
         last_sep = call.data.rfind(';')
         set_chat_id = call.data[5:last_sep]
+        print('chat_id for request', set_chat_id)
         set_chat_title = call.data[last_sep + 1:]
 
         requests.append({})
@@ -87,11 +278,29 @@ def new_bot(user_token):
         sent_set_chat_msg = bot.send_message(call.message.chat.id, set_chat_msg)
         bot.register_next_step_handler(sent_set_chat_msg, set_start_date)
 
+
+    @bot.callback_query_handler(func=lambda call: "DEL_REQ" in call.data)
+    def del_curr_req(call):
+        last_sep = call.data.rfind(';')
+        curr_req_num = int(call.data[last_sep + 1:])
+
+        request = requests[curr_req_num]
+        request_chat_id = request['chat_id']
+        request_chat_title = request['chat_title']
+        requests.remove(request)
+        del_curr_req_msg = "Заявка успешно удалена"
+        markup = types.InlineKeyboardMarkup()
+        callback_button = types.InlineKeyboardButton(text="Назад", callback_data="SHOW_REQS_CHAT;" + str(request_chat_id) + ";" + str(request_chat_title))
+        markup.add(callback_button)
+        bot.edit_message_text(del_curr_req_msg, call.from_user.id, call.message.message_id, reply_markup=markup)
+
+
     @bot.message_handler(commands=['messages'])  # просмотр всех рассылок
     def set_request_text(message):
         set_request_msg = 'Введите текст рассылки:'
-        sent_request_msg = bot.send_message(message.chat.id, set_request_msg, parse_mode='html')
+        sent_request_msg = bot.send_message( message.chat.id, set_request_msg, parse_mode='html')
         # bot.register_next_step_handler(sent_request_msg, set_start_date)
+
 
     def set_start_date(message):
         now = datetime.datetime.now()  # Current date
@@ -103,6 +312,7 @@ def new_bot(user_token):
 
         markup = create_calendar(now.year, now.month)
         bot.send_message(message.chat.id, "Выберите дату начала:", reply_markup=markup)
+
 
     @bot.callback_query_handler(func=lambda call: 'DAY' in call.data and 'ENDDAY' not in call.data)
     def get_day(call):
@@ -117,13 +327,13 @@ def new_bot(user_token):
             keyboard.add(callback_button)
             callback_button = types.InlineKeyboardButton(text='ИЗМЕНИТЬ', callback_data='edit_data')
             keyboard.add(callback_button)
-            bot.edit_message_text("Выбранная дата:\n" + str(date), call.from_user.id, call.message.message_id,
-                                  reply_markup=keyboard)
+            bot.edit_message_text("Выбранная дата:\n" + str(date), call.from_user.id, call.message.message_id, reply_markup=keyboard)
             bot.answer_callback_query(call.id, text="")
 
         else:
             # add your reaction for shown an error
             pass
+
 
     def set_end_date(call):
         message = call.message
@@ -133,8 +343,8 @@ def new_bot(user_token):
         current_shown_dates[chat_id] = date  # Saving the current date in a dict
         # print(current_shown_dates)
         markup = create_end_calendar(now.year, now.month)
-        bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id,
-                              reply_markup=markup)
+        bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id, reply_markup=markup)
+
 
     @bot.callback_query_handler(func=lambda call: 'ENDDAY' in call.data)
     def set_end_day(call):
@@ -144,25 +354,24 @@ def new_bot(user_token):
             day = call.data[14:] if ';' in call.data[13:14] else call.data[15:]
             date = datetime.datetime(int(saved_date[0]), int(saved_date[1]), int(day), 0, 0, 0).strftime("%d.%m.%Y")
             keyboard = types.InlineKeyboardMarkup()
-            callback_button = types.InlineKeyboardButton(text='ПОДТВЕРДИТЬ',
-                                                         callback_data='accept_end_data;' + str(date))
+            callback_button = types.InlineKeyboardButton(text='ПОДТВЕРДИТЬ', callback_data='accept_end_data;' + str(date))
             keyboard.add(callback_button)
             callback_button = types.InlineKeyboardButton(text='ИЗМЕНИТЬ', callback_data='edit_end_data')
             keyboard.add(callback_button)
-            bot.edit_message_text("Выбранная дата окончания:\n" + str(date), call.from_user.id, call.message.message_id,
-                                  reply_markup=keyboard)
+            bot.edit_message_text("Выбранная дата окончания:\n" + str(date), call.from_user.id, call.message.message_id, reply_markup=keyboard)
             bot.answer_callback_query(call.id, text="")
 
         else:
             # add your reaction for shown an error
             pass
 
+
     @bot.callback_query_handler(func=lambda call: 'NEXT-MONTH' in call.data and 'NEXT-END-MONTH' not in call.data)
     def next_month(call):
         chat_id = call.message.chat.id
         saved_date = current_shown_dates.get(chat_id)
         if saved_date is not None:
-            year, month = saved_date
+            year,month = saved_date
             month += 1
             if month > 12:
                 month = 1
@@ -175,6 +384,7 @@ def new_bot(user_token):
         else:
             # add your reaction for shown an error
             pass
+
 
     @bot.callback_query_handler(func=lambda call: 'NEXT-END-MONTH' in call.data)
     def previous_month(call):
@@ -189,12 +399,12 @@ def new_bot(user_token):
             date = (year, month)
             current_shown_dates[chat_id] = date
             markup = create_end_calendar(year, month)
-            bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id,
-                                  reply_markup=markup)
+            bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id, reply_markup=markup)
             bot.answer_callback_query(call.id, text="")
         else:
             # add your reaction for shown an error
             pass
+
 
     @bot.callback_query_handler(func=lambda call: 'PREV-MONTH' in call.data and 'PREV-END-MONTH' not in call.data)
     def previous_month(call):
@@ -215,6 +425,7 @@ def new_bot(user_token):
             # add your reaction for shown an error
             pass
 
+
     @bot.callback_query_handler(func=lambda call: 'PREV-END-MONTH' in call.data)
     def previous_month(call):
         chat_id = call.message.chat.id
@@ -228,27 +439,29 @@ def new_bot(user_token):
             date = (year, month)
             current_shown_dates[chat_id] = date
             markup = create_end_calendar(year, month)
-            bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id,
-                                  reply_markup=markup)
+            bot.edit_message_text("Выберите дату окончания:", call.from_user.id, call.message.message_id, reply_markup=markup)
             bot.answer_callback_query(call.id, text="")
         else:
             # add your reaction for shown an error
             pass
 
+
     @bot.callback_query_handler(func=lambda call: "IGNORE" in call.data)
     def ignore(call):
         bot.answer_callback_query(call.id, text="smth wrong")
+
 
     @bot.callback_query_handler(func=lambda call: call.data == "edit_data")
     def get_calendar(call):
         message = call.message
         now = datetime.datetime.now()  # Current date
         chat_id = message.chat.id
-        date = (now.year, now.month)
+        date = (now.year,now.month)
         current_shown_dates[chat_id] = date  # Saving the current date in a dict
 
         markup = create_calendar(now.year, now.month)
         bot.edit_message_text("Изменить дату:", call.from_user.id, call.message.message_id, reply_markup=markup)
+
 
     @bot.callback_query_handler(func=lambda call: call.data == "edit_end_data")
     def get_calendar(call):
@@ -260,6 +473,7 @@ def new_bot(user_token):
 
         markup = create_end_calendar(now.year, now.month)
         bot.edit_message_text("Изменить дату:", call.from_user.id, call.message.message_id, reply_markup=markup)
+
 
     @bot.callback_query_handler(func=lambda call: "accept_data" in call.data and "accept_end_data" not in call.data)
     def get_calendar(call):
@@ -287,6 +501,7 @@ def new_bot(user_token):
 
         bot.edit_message_text(choose_msg, call.from_user.id, call.message.message_id, reply_markup=keyboard)
 
+
     @bot.callback_query_handler(func=lambda call: 'accept_end_data' in call.data)
     def success(call):
         end_date = call.data[16:]
@@ -295,17 +510,38 @@ def new_bot(user_token):
         # print(requests)
         success_msg = "Рассылка создана."
         bot.edit_message_text(success_msg, call.from_user.id, call.message.message_id)
+
+        message = call.message
+
+        hello_msg = "Добавь новые запросы! \n" \
+                    "\n" \
+                    "Не забудь убедиться, что я есть " \
+                    "в чатах, в которые ты хочешь добавить запрос.\n" \
+                    "\n" \
+                    "\n" \
+                    "Чаты для добавления:"
+
+        keyboard = types.InlineKeyboardMarkup()
+        if message.chat.type == "private":
+            get_chat_list_btns(keyboard)
+
+            callback_button = types.InlineKeyboardButton(text="Мои рассылки", callback_data="show_reqs")
+            keyboard.add(callback_button)
+            # callback_button = types.InlineKeyboardButton(text="Удалить запросы", callback_data="del_req")
+            # keyboard.add(callback_button)
+            bot.send_message(message.chat.id, hello_msg, reply_markup=keyboard)
+
         # send_request(requests[requests_count])
         threads.append({})
+        print(requests_count)
         threads[requests_count]['target'] = send_request
         threads[requests_count]['name'] = "Request " + str(requests_count) + " thread"
         threads[requests_count]['args'] = requests[requests_count]
         print('args', threads[requests_count]['args'])
         threads[requests_count]['daemon'] = True
-        new_request_thread = th.Thread(target=threads[requests_count]['target'], name=threads[requests_count]['name'],
-                                       args=([threads[requests_count]['args']]),
-                                       daemon=threads[requests_count]['daemon'])
+        new_request_thread = th.Thread(target=threads[requests_count]['target'], name=threads[requests_count]['name'], args=([threads[requests_count]['args']]), daemon=threads[requests_count]['daemon'])
         new_request_thread.start()
+
 
     @bot.callback_query_handler(func=lambda call: "PERIOD" in call.data)
     def set_period(call):
@@ -314,6 +550,7 @@ def new_bot(user_token):
         message_id = call.message.message_id
 
         set_time(period, chat_id, message_id)
+
 
     def set_time(period, chat_id, message_id):
 
@@ -326,8 +563,7 @@ def new_bot(user_token):
             requests_count = len(requests) - 1
             requests[requests_count]['period'] = period
             # print('period from set_time', period)
-            requests[requests_count]['period_opts'] = 'weekdays' if len(period) != 1 else 'every;' + str(
-                period[0]) + ';day'
+            requests[requests_count]['period_opts'] = 'weekdays' if len(period) != 1 else 'every;' + str(period[0]) + ';day'
             # print(requests)
             wright_period(period)
 
@@ -336,14 +572,14 @@ def new_bot(user_token):
             set_weekdays_msg = "Выберите дни недели:"
             keyboard = types.InlineKeyboardMarkup()
             weekdays_buttons = [{'text': 'Mo', 'callback': 'WEEK;1;0'},
-                                {'text': 'Tu', 'callback': 'WEEK;2;0'},
-                                {'text': 'We', 'callback': 'WEEK;3;0'},
-                                {'text': 'Th', 'callback': 'WEEK;4;0'},
-                                {'text': 'Fr', 'callback': 'WEEK;5;0'},
-                                {'text': 'Sa', 'callback': 'WEEK;6;0'},
-                                {'text': 'Su', 'callback': 'WEEK;7;0'},
-                                {'text': 'Подтвердить', 'callback': 'WEEK;A;0'},
-                                {'text': 'Назад', 'callback': 'WEEK;B;0'}]
+                              {'text': 'Tu', 'callback': 'WEEK;2;0'},
+                              {'text': 'We', 'callback': 'WEEK;3;0'},
+                              {'text': 'Th', 'callback': 'WEEK;4;0'},
+                              {'text': 'Fr', 'callback': 'WEEK;5;0'},
+                              {'text': 'Sa', 'callback': 'WEEK;6;0'},
+                              {'text': 'Su', 'callback': 'WEEK;7;0'},
+                              {'text': 'Подтвердить', 'callback': 'WEEK;A;0'},
+                              {'text': 'Назад', 'callback': 'WEEK;B;0'}]
 
             for btn in weekdays_buttons:
                 text, callback = btn['text'], btn['callback']
@@ -361,14 +597,18 @@ def new_bot(user_token):
         elif period == 'month_day':
             pass
 
+
     def wright_period(period__):
         pass  # записываем период
 
+
     period = []
+
 
     @bot.callback_query_handler(func=lambda call: "DATE" in call.data)
     def set_date_number(call):
         set_end_date(call)
+
 
     @bot.callback_query_handler(func=lambda call: "WEEK" in call.data)
     def set_weekdays(call):
@@ -413,15 +653,17 @@ def new_bot(user_token):
         elif call.data[5:6] is "B":
             get_calendar(call)
 
+
     curr_weekdays_buttons = [{'text': 'Mo', 'callback': 'WEEK;1;0'},
-                             {'text': 'Tu', 'callback': 'WEEK;2;0'},
-                             {'text': 'We', 'callback': 'WEEK;3;0'},
-                             {'text': 'Th', 'callback': 'WEEK;4;0'},
-                             {'text': 'Fr', 'callback': 'WEEK;5;0'},
-                             {'text': 'Sa', 'callback': 'WEEK;6;0'},
-                             {'text': 'Su', 'callback': 'WEEK;7;0'},
-                             {'text': 'Подтвердить', 'callback': 'WEEK;A;0'},
+                            {'text': 'Tu', 'callback': 'WEEK;2;0'},
+                            {'text': 'We', 'callback': 'WEEK;3;0'},
+                            {'text': 'Th', 'callback': 'WEEK;4;0'},
+                            {'text': 'Fr', 'callback': 'WEEK;5;0'},
+                            {'text': 'Sa', 'callback': 'WEEK;6;0'},
+                            {'text': 'Su', 'callback': 'WEEK;7;0'},
+                            {'text': 'Подтвердить', 'callback': 'WEEK;A;0'},
                              {'text': 'Назад', 'callback': 'WEEK;B;0'}]
+
 
     def tick_button(call, buttons, event):
 
@@ -448,6 +690,7 @@ def new_bot(user_token):
             print('unticked', curr_weekdays_buttons)
         return curr_weekdays_buttons
 
+
     @bot.callback_query_handler(func=lambda call: "TIME" in call.data)
     def set_hour(call):
         time = call.data[5:7] if ';' not in call.data[5:7] else call.data[5:6]
@@ -461,11 +704,13 @@ def new_bot(user_token):
         bot.edit_message_text("Выбранное время:\n" + time, call.from_user.id, call.message.message_id,
                               reply_markup=keyboard)
 
+
     @bot.callback_query_handler(func=lambda call: call.data == 'edit_time')
     def set_hour(call):
         markup = create_time()
         bot.edit_message_text("Изменить время:\n", call.from_user.id, call.message.message_id,
                               reply_markup=markup)
+
 
     @bot.callback_query_handler(func=lambda call: 'accept_time' in call.data)
     def set_hour(call):
@@ -475,6 +720,7 @@ def new_bot(user_token):
 
         bot.edit_message_text("Время выбрано!", call.from_user.id, call.message.message_id)
         set_end_date(call)
+
 
     # def format_period(_period, period_opts):
     #     if "weekdays" in period_opts:
@@ -493,6 +739,7 @@ def new_bot(user_token):
             elif curr_datetime < request_datetime:
                 sleep(60)
                 send_request(curr_request)
+
 
     def get_curr_request_date(curr_datetime, curr_request):
 
@@ -515,6 +762,7 @@ def new_bot(user_token):
 
         return curr_datetime
 
+
     def send_request(request):
         print('all requests', requests)
         print('all threads', threads)
@@ -524,8 +772,7 @@ def new_bot(user_token):
         curr_request = deepcopy(request)
         print(request)
         print('current request:', curr_request)
-        chat_id, text, start_date, period, period_opts, time, end_date = request['chat_id'], request['text'], request[
-            'start_date'], request['period'], request['period_opts'], request['time'], request['end_date']
+        chat_id, text, start_date, period, period_opts, time, end_date = request['chat_id'], request['text'], request['start_date'], request['period'], request['period_opts'], request['time'], request['end_date']
         curr_datetime = str(datetime.datetime.now().strftime("%d.%m.%Y %H:") + "00")
         request_datetime = get_curr_request_date(curr_datetime, curr_request)
         curr_weekday = str(datetime.datetime.today().weekday())
@@ -554,8 +801,10 @@ def new_bot(user_token):
 
                 send_request_period(period, curr_weekday, curr_datetime, curr_request, request_datetime)
 
+
     def get_response(message):
-        # подтянуть из гугл таблиц
         print(message.text)
 
-    bot.polling(none_stop=True)
+
+    bot.polling()
+
