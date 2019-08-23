@@ -6,7 +6,7 @@ from copy import deepcopy
 from time import sleep
 import threading as th
 from db_scripts import *
-from sheets import *
+from googlesheets import *
 import json
 import sqlite3
 from googletrans import Translator
