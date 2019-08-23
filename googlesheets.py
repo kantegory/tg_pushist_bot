@@ -126,7 +126,7 @@ def set_sheets_value(service, spreadsheet_id, ranges, values):
             {"range": ranges,
              "majorDimension": "ROWS",
              # сначала заполнять ряды, затем столбцы (т.е. самые внутренние списки в values - это ряды)
-             "values": [values]}
+             "values": values}
         ]
     })
     response = request.execute()
