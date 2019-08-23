@@ -47,7 +47,26 @@ def new_bot(user_token, lang, service, spreadsheet_id):
         bot_info = init_bot_info()
         bot_tg_id = bot_info['bot_tg_id']
         bot_stat = select_bot(bot_tg_id)[0]['bot_stat']
-        print(bot_stat)
+        return bot_stat
+
+    values = [
+        ['Текст рассылки', 'Ответ', 'Реакция'],
+        ['Сколько денег заработал?', '1000', 'Надо поднажать'],
+        ['Сколько денег заработал?', '5000', 'Неплохо'],
+        ['Сколько денег заработал?', '10000', 'Отлично продолжай в том же духе']
+    ]
+    print(values)
+
+    ranges = '{}!A{}:C{}'.format('Рассылки', 1, 5)
+    set_sheets_value(service, spreadsheet_id, ranges, values)
+
+    values = [['Дата и время ответа', 'Текст ответа', 'Username', 'Чат', 'Дата и время запроса', 'Запрос']]
+    ranges = '{}!A{}:F{}'.format('Ответы на запросы бота', 1, 1)
+    set_sheets_value(service, spreadsheet_id, ranges, values)
+
+    ranges = '{}!A{}:C{}'.format('Рассылки', 2, 4)
+    # answers = get_sheets_value(service, spreadsheet_id, ranges)
+    # print('this is answers attention', answers)
 
     def set_user_info(user_tg_id, user_name, user_language, user_refer_name):
         user_info = [{
@@ -719,7 +738,7 @@ def new_bot(user_token, lang, service, spreadsheet_id):
         request_sent_date = datetime.datetime.fromtimestamp(message.date).strftime('%d.%m.%Y %H:%M')
         request_sent_text = message.text
         ranges = '{}!E{}:F{}'.format('Ответы на запросы бота', 2, 2)
-        values = [request_sent_date, request_sent_text]
+        values = [[request_sent_date, request_sent_text]]
         # pass
         # 'Дата и время ответа	Ответ	Дата и время запроса	Запрос	@username отвечающего	Чат '
         # message.
@@ -758,7 +777,7 @@ def new_bot(user_token, lang, service, spreadsheet_id):
         answer_sent_chat = message.chat.title
 
         ranges = '{}!A{}:D{}'.format('Ответы на запросы бота', 2, 2)
-        values = [answer_sent_date, answer_sent_text, answer_sent_username, answer_sent_chat]
+        values = [[answer_sent_date, answer_sent_text, answer_sent_username, answer_sent_chat]]
         set_sheets_value(service, spreadsheet_id, ranges, values)
 
     @bot.callback_query_handler(func=lambda call: call.data == "SHOW_REQ")
@@ -877,3 +896,4 @@ def new_bot(user_token, lang, service, spreadsheet_id):
                               reply_markup=markup)
 
     bot.polling()
+
