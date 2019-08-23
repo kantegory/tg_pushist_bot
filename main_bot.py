@@ -32,9 +32,9 @@ sheet_list = {'users': 'Статистика пользователей', 'for_d
 main_bot_spreadsheet_id, spreadsheet_url, service = create_sheet(scopes, title)
 
 create_new_list(main_bot_spreadsheet_id, service, sheet_list['users'])
-users_head_values = ['id',	'@username',	'Дата регистрации',	'Боты',	'Кол-во запросов за последний месяц',
+users_head_values = [['id',	'@username',	'Дата регистрации',	'Боты',	'Кол-во запросов за последний месяц',
                      'Кол-во софрмированных запросов',	'Тариф', 'Кол-во оплат', 'Сумма оплат',	'Промокоды',
-                     'Кол-во использованных промокодов', 'Рефералы', 'Когда закончится полный период']
+                     'Кол-во использованных промокодов', 'Рефералы', 'Когда закончится полный период']]
 set_sheets_value(
     service,
     main_bot_spreadsheet_id,
@@ -43,8 +43,8 @@ set_sheets_value(
 )
 
 create_new_list(main_bot_spreadsheet_id, service, sheet_list['for_days'])
-for_days_head_values = ['Дата',	'Кол-во новых пользователей:', 'Кол-во оплат:',	'Кол-во использования промокодов:',
-                        'Кол-во запросов созданных за сутки:', 'Кол-во запросов отправленных за сутки:']
+for_days_head_values = [['Дата',	'Кол-во новых пользователей:', 'Кол-во оплат:',	'Кол-во использования промокодов:',
+                        'Кол-во запросов созданных за сутки:', 'Кол-во запросов отправленных за сутки:']]
 set_sheets_value(
     service,
     main_bot_spreadsheet_id,
@@ -53,8 +53,8 @@ set_sheets_value(
 )
 
 create_new_list(main_bot_spreadsheet_id, service, sheet_list['for_hours'])
-for_hours_head_values = ['Дата', 'Кол-во новых пользователей:', 'Кол-во оплат:', 'Кол-во использования промокодов:',
-                         'Кол-во запросов созданных за час:', 'Кол-во запросов отправленных за час:']
+for_hours_head_values = [['Дата', 'Кол-во новых пользователей:', 'Кол-во оплат:', 'Кол-во использования промокодов:',
+                         'Кол-во запросов созданных за час:', 'Кол-во запросов отправленных за час:']]
 set_sheets_value(
     service,
     main_bot_spreadsheet_id,
@@ -122,16 +122,16 @@ def get_stat_for_day(day=None):
     if interval == 2:
 
         ranges = sheet_list['for_days'] + '!A{}:F{}'.format(interval, interval)
-        values = [day, users_count, payments_count, promos_count, requests_count, requests_count]
+        values = [[day, users_count, payments_count, promos_count, requests_count, requests_count]]
 
         set_sheets_value(service, main_bot_spreadsheet_id, ranges, values)
 
     elif interval > 2:
 
         ranges = sheet_list['for_days'] + '!A{}:F{}'.format(interval, interval)
-        values = [day, '=B2-{}'.format(users_count), '=C2-{}'.format(payments_count),
+        values = [[day, '=B2-{}'.format(users_count), '=C2-{}'.format(payments_count),
                   '=D2-{}'.format(promos_count), '=E2-{}'.format(requests_count),
-                  '=E2-{}'.format(requests_count)]
+                  '=E2-{}'.format(requests_count)]]
 
         set_sheets_value(service, main_bot_spreadsheet_id, ranges, values)
 
@@ -156,16 +156,16 @@ def get_stat_for_hour(daytime=None):
     if interval == 2:
 
         ranges = sheet_list['for_hours'] + '!A{}:F{}'.format(interval, interval)
-        values = [day + ' ' + daytime.time().strftime('%H:%M'), users_count, payments_count, promos_count, requests_count, requests_count]
+        values = [[day + ' ' + daytime.time().strftime('%H:%M'), users_count, payments_count, promos_count, requests_count, requests_count]]
 
         set_sheets_value(service, main_bot_spreadsheet_id, ranges, values)
 
     elif interval > 2:
 
         ranges = sheet_list['for_hours'] + '!A{}:F{}'.format(interval, interval)
-        values = [day + ' ' + daytime.strftime('%H:%M'), '=B2-{}'.format(users_count), '=C2-{}'.format(payments_count),
+        values = [[day + ' ' + daytime.strftime('%H:%M'), '=B2-{}'.format(users_count), '=C2-{}'.format(payments_count),
                   '=D2-{}'.format(promos_count), '=E2-{}'.format(requests_count),
-                  '=E2-{}'.format(requests_count)]
+                  '=E2-{}'.format(requests_count)]]
 
         set_sheets_value(service, main_bot_spreadsheet_id, ranges, values)
 
@@ -218,9 +218,9 @@ def get_stat_for_users():
         ranges = sheet_list['users'] + '!A{}:M{}'.format(users_count, users_count)
 
         # собираем все данные для отправки в таблицу
-        values = [user_tg_id, user_name, user_registration_date, user_bots, user_requests_for_last_month, user_requests,
+        values = [[user_tg_id, user_name, user_registration_date, user_bots, user_requests_for_last_month, user_requests,
                   user_tariff, user_payments_count, user_payments_sum, user_promos, user_promos_count, user_refs_names,
-                  user_payment_end_date]
+                  user_payment_end_date]]
 
         # записываем всё в таблицу
         set_sheets_value(service, main_bot_spreadsheet_id, ranges, values)
@@ -500,6 +500,7 @@ def handle_token(message):
                 spreadsheet_id, _spreadsheet_url, _service = create_sheet(scopes, _title)
                 create_new_list(spreadsheet_id, service, 'Рассылки')
                 create_new_list(spreadsheet_id, service, 'Ответы на запросы бота')
+                '''
                 values = [
                     ['Текст рассылки', 'Ответ', 'Реакция'],
                     ['Сколько денег заработал?', '1000', 'Надо поднажать'],
@@ -507,15 +508,18 @@ def handle_token(message):
                     ['Сколько денег заработал?', '10000', 'Отлично продолжай в том же духе']
                 ]
                 print(values)
+
                 ranges = '{}!A{}:C{}'.format('Рассылки', 1, 4)
                 set_sheets_value(_service, spreadsheet_id, ranges, values)
+                
                 values = ['Дата и время ответа', 'Текст ответа', 'Username', 'Чат', 'Дата и время запроса', 'Запрос']
                 ranges = '{}!A{}:F{}'.format('Ответы на запросы бота', 1, 1)
                 set_sheets_value(_service, spreadsheet_id, ranges, values)
+                
                 ranges = '{}!A{}:C{}'.format('Рассылки', 2, 4)
-                answers = get_sheets_value(service, spreadsheet_id, ranges)
+                answers = get_sheets_value(_service, spreadsheet_id, ranges)
                 print('this is answers attention', answers)
-
+                '''
                 print('bot spreadsheet', spreadsheet_url)
                 threads_bot.append({})
                 threads_bot_count = len(threads_bot) - 1
