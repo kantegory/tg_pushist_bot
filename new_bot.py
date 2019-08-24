@@ -8,17 +8,14 @@ import threading as th
 from db_scripts import *
 from googlesheets import *
 import json
-import sqlite3
 from googletrans import Translator
 
 
 def new_bot(user_token, lang, service, spreadsheet_id):
-    'Дата и время запроса Запрос Дата и время ответа	Ответ @username отвечающего Чат'
-    telebot.apihelper.proxy = {'https': 'socks5://v3_124570271:5ClzQKYq@s5.priv.opennetwork.cc:1080'}
+
+    telebot.apihelper.proxy = {'https': 'socks5://USERPROXY:PASSWORD@IP:PORT'}
 
     bot = telebot.TeleBot(user_token)
-
-    # bot = telebot.TeleBot('761131294:AAH406zzUNqzrGTpMn8eDllELsxM9H6jolI')
 
     s = session()
 
@@ -63,10 +60,6 @@ def new_bot(user_token, lang, service, spreadsheet_id):
     values = [['Дата и время ответа', 'Текст ответа', 'Username', 'Чат', 'Дата и время запроса', 'Запрос']]
     ranges = '{}!A{}:F{}'.format('Ответы на запросы бота', 1, 1)
     set_sheets_value(service, spreadsheet_id, ranges, values)
-
-    ranges = '{}!A{}:C{}'.format('Рассылки', 2, 4)
-    # answers = get_sheets_value(service, spreadsheet_id, ranges)
-    # print('this is answers attention', answers)
 
     def set_user_info(user_tg_id, user_name, user_language, user_refer_name):
         user_info = [{
@@ -313,8 +306,21 @@ def new_bot(user_token, lang, service, spreadsheet_id):
 
         info = call.data.split(sep=';')
         chat_tg_id, chat_title = info[1], info[2]
-
-        handle_chat_query_msg = translate_to(lang, 'Введите текст рассылки в {}').format(chat_title)
+        user_tg_id = str(call.from_user.id)
+        status = select_user(user_tg_id)[0]['user_status']
+        requests = select_request_by_user_id(user_tg_id)
+        curr_date = datetime.datetime.now().strftime('%d.%m.%Y')
+        req_create_date = ''
+    
+        for _req in requests:
+            req_create_date = _req['request_create_date']
+    
+        if status == '0' and req_create_date == curr_date:
+            handle_chat_query_msg = translate_to(
+                lang, 'Без подписки Вы не можете создавать более одной рассылки в день.\n '
+                      'Перейдите в меню главного бота для оплаты.')
+        else:
+            handle_chat_query_msg = translate_to(lang, 'Введите текст рассылки в {}').format(chat_title)
 
         markup = types.InlineKeyboardMarkup()
         callback_button = types.InlineKeyboardButton(text=translate_to(lang, 'Назад'), callback_data='back')
@@ -325,12 +331,12 @@ def new_bot(user_token, lang, service, spreadsheet_id):
         bot.register_next_step_handler(sent_msg, handle_request_text)
 
     def handle_request_text(message):
-
+        
         # write in temp arr
         tmp_requests.append({})
         requests_count = len(tmp_requests) - 1
         tmp_requests[requests_count]['request_text'] = message.text
-
+        tmp_requests[requests_count]['request_create_date'] = datetime.datetime.now().strftime('%d.%m.%Y')
         handle_request_text_msg = translate_to(lang, 'Выберите дату начала: \n')
 
         # this is markup
@@ -737,16 +743,11 @@ def new_bot(user_token, lang, service, spreadsheet_id):
     def add_request_to_sheet(message):
         request_sent_date = datetime.datetime.fromtimestamp(message.date).strftime('%d.%m.%Y %H:%M')
         request_sent_text = message.text
-        ranges = '{}!E{}:F{}'.format('Ответы на запросы бота', 2, 2)
-        values = [[request_sent_date, request_sent_text]]
-        # pass
-        # 'Дата и время ответа	Ответ	Дата и время запроса	Запрос	@username отвечающего	Чат '
-        # message.
-        '''
-        attention {'content_type': 'text', 'message_id': 145, 'from_user': {'id': 124570271, 'is_bot': False, 'first_name': 'David', 'username': 'kantegory', 'last_name': 'Dobryakov', 'language_code': 'ru'}, 'date': 1566585367, 'chat': {'type': 'private', 'last_name': 'Dobryakov', 'first_name': 'David', 'username': 'kantegory', 'id': 124570271, 'title': None, 'all_members_are_administrators': None, 'photo': None, 'description': None, 'invite_link': None, 'pinned_message': None, 'sticker_set_name': None, 'can_set_sticker_set': None}, 'forward_from_chat': None, 'forward_from': None, 'forward_date': None, 'reply_to_message': None, 'edit_date': None, 'media_group_id': None, 'author_signature': None, 'text': '/start', 'entities': [<telebot.types.MessageEntity object at 0x7fe6a35c6ac8>], 'caption_entities': None, 'audio': None, 'document': None, 'photo': None, 'sticker': None, 'video': None, 'video_note': None, 'voice': None, 'caption': None, 'contact': None, 'location': None, 'venue': None, 'new_chat_member': None, 'new_chat_members': None, 'left_chat_member': None, 'new_chat_title': None, 'new_chat_photo': None, 'delete_chat_photo': None, 'group_chat_created': None, 'supergroup_chat_created': None, 'channel_chat_created': None, 'migrate_to_chat_id': None, 'migrate_from_chat_id': None, 'pinned_message': None, 'invoice': None, 'successful_payment': None, 'connected_website': None, 'json': {'message_id': 145, 'from': {'id': 124570271, 'is_bot': False, 'first_name': 'David', 'last_name': 'Dobryakov', 'username': 'kantegory', 'language_code': 'ru'}, 'chat': {'id': 124570271, 'first_name': 'David', 'last_name': 'Dobryakov', 'username': 'kantegory', 'type': 'private'}, 'date': 1566585367, 'text': '/start', 'entities': [{'offset': 0, 'length': 6, 'type': 'bot_command'}]}}
-        '''
-        set_sheets_value(service, spreadsheet_id, ranges, values)
-
+        
+        _ranges = '{}!E{}:F{}'.format('Ответы на запросы бота', 2, 2)
+        _values = [[request_sent_date, request_sent_text]]
+        
+        set_sheets_value(service, spreadsheet_id, _ranges, _values)
 
     def get_interval(start, end):
 
@@ -763,22 +764,30 @@ def new_bot(user_token, lang, service, spreadsheet_id):
         return interval.days
 
     def get_bot_answer(message):
-        bot.clear_step_handler_by_chat_id(message.chat.id)
-        print(message)
-        ranges = '{}!A{}:C{}'.format('Рассылки', 2, 4)
-        answers = get_sheets_value(service, spreadsheet_id, ranges)
-        print(answers)
-        # 'Дата и время ответа	Ответ	Дата и время запроса	Запрос	@username отвечающего	Чат '
 
-        bot.send_message(message.chat.id, 'ответ')
+        bot.clear_step_handler_by_chat_id(message.chat.id)
+
+        _ranges = '{}!A{}:C{}'.format('Рассылки', 2, 4)
+        answers = get_sheets_value(service, spreadsheet_id, _ranges)
+        print(answers)
+
+        if message.text <= answers[0][1]:
+            bot.send_message(message.chat.id, answers[0][2])
+
+        elif message.text > answers[0][1] and message <= answers[1][1]:
+            bot.send_message(message.chat.id, answers[1][2])
+
+        elif message.text >= answers[2][1]:
+            bot.send_message(message.chat.id, answers[2][2])
+
         answer_sent_date = datetime.datetime.fromtimestamp(message.date).strftime('%d.%m.%Y %H:%M')
         answer_sent_text = message.text
         answer_sent_username = message.from_user.username
         answer_sent_chat = message.chat.title
 
-        ranges = '{}!A{}:D{}'.format('Ответы на запросы бота', 2, 2)
-        values = [[answer_sent_date, answer_sent_text, answer_sent_username, answer_sent_chat]]
-        set_sheets_value(service, spreadsheet_id, ranges, values)
+        _ranges = '{}!A{}:D{}'.format('Ответы на запросы бота', 2, 2)
+        _values = [[answer_sent_date, answer_sent_text, answer_sent_username, answer_sent_chat]]
+        set_sheets_value(service, spreadsheet_id, _ranges, _values)
 
     @bot.callback_query_handler(func=lambda call: call.data == "SHOW_REQ")
     def handle_show_req_query(call):
