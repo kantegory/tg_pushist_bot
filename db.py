@@ -37,6 +37,7 @@ class Requests(Base):
     request_start_date = Column(String)
     request_time = Column(String)
     request_end_date = Column(String)
+    request_create_date = Column(String)
     user_id = Column(Integer)
     chat_id = Column(Integer)
 
