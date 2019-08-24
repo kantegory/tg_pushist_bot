@@ -2,4 +2,4 @@
 
 Multilang telegram bot to monitor employees.  
   
-Usage: telebot, googleapiclient, googletrans.
+Usage libs: telebot, telegram, googleapiclient, googletrans, sqlalchemy.
