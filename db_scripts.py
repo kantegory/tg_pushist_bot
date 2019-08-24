@@ -1,11 +1,9 @@
 from db import Users, Bots, Requests, Chats, Payments, Promos, session
 from sqlalchemy import select, delete
-# добавить select и delete
 s = session()
 
 
 def user_add(user):
-    # s = session()
     rows = s.query(Users).all()
     check = []
     for row in rows:
@@ -25,7 +23,6 @@ def user_add(user):
 
 
 def bot_add(bot):
-    # s = session()
     print(bot)
     rows = s.query(Bots).all()
     check = []
@@ -46,10 +43,9 @@ def bot_add(bot):
 
 
 def request_add(request):
-    # s = session()
-
+    
     for curr_row in request:
-        print(curr_row)
+    
         requests = Requests(
             request_text=str(curr_row['request_text']),
             request_period=str(curr_row['request_period']),
@@ -58,19 +54,16 @@ def request_add(request):
             request_time=curr_row['request_time'],
             request_end_date=curr_row['request_end_date'],
             user_id=curr_row['user_id'],
-            chat_id=curr_row['chat_id']
+            chat_id=curr_row['chat_id'],
+            request_create_date=curr_row['request_create_date']
         )
         s.add(requests)
 
     s.commit()
 
-
-# request_add([{'chat_id': '-397823276', 'request_text': 'fdhjbfd', 'request_start_date': '19.08.2019', 'user_id': '761131294', 'request_time': '23:15', 'request_period_opts': 'every;1;day', 'request_end_date': '21.08.2019', 'request_period': '1'}])
-
-
+    
 def chat_add(chat):
-    # s = session()
-
+    
     rows = s.query(Chats).all()
     check = []
     for row in rows:
@@ -89,8 +82,7 @@ def chat_add(chat):
 
 
 def payment_add(payment):
-    # s = session()
-
+    
     for curr_row in payment:
         payments = Payments(
             payment_amount=curr_row['payment_amount'],
@@ -104,7 +96,6 @@ def payment_add(payment):
 
 
 def promo_add(promo):
-    # s = session()
 
     rows = s.query(Promos).all()
     check = []
@@ -178,7 +169,8 @@ def select_request(user_id, chat_id):
     result = [{'request_id': rows[i].request_id, 'request_text': rows[i].request_text,
                'request_period': rows[i].request_period, 'request_period_opts': rows[i].request_period_opts,
                'request_start_date': rows[i].request_start_date, 'request_end_date': rows[i].request_end_date,
-               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time}
+               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time,
+               'request_create_date': rows[i].request_create_date}
               for i in range(len(rows))]
     return result
 
@@ -188,7 +180,8 @@ def select_request_by_user_id(user_id):
     result = [{'request_id': rows[i].request_id, 'request_text': rows[i].request_text,
                'request_period': rows[i].request_period, 'request_period_opts': rows[i].request_period_opts,
                'request_start_date': rows[i].request_start_date, 'request_end_date': rows[i].request_end_date,
-               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time}
+               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time,
+               'request_create_date': rows[i].request_create_date}
               for i in range(len(rows))]
     return result
 
@@ -198,7 +191,8 @@ def select_requests():
     result = [{'request_id': rows[i].request_id, 'request_text': rows[i].request_text,
                'request_period': rows[i].request_period, 'request_period_opts': rows[i].request_period_opts,
                'request_start_date': rows[i].request_start_date, 'request_end_date': rows[i].request_end_date,
-               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time}
+               'request_chat_id': rows[i].chat_id, 'request_time': rows[i].request_time,
+               'request_create_date': rows[i].request_create_date}
               for i in range(len(rows))]
     return result
 
@@ -314,7 +308,6 @@ def select_promo_by_id(promo_id):
 
 def delete_request(request_id):
     s.query(Requests).filter(Requests.request_id == int(request_id)).delete()
-    # s.delete(Requests).where(Requests.request_id == int(request_id))
     s.commit()
 
 
@@ -331,8 +324,4 @@ def update_user_status(user_tg_id, new_status):
 def update_bot_stat(bot_tg_id, new_bot_stat):
 
     s.query(Bots).filter(Bots.bot_tg_id == str(bot_tg_id)).update({'bot_stat': new_bot_stat})
-    # print(res[0].bot_stat)
-    # print(Bots.bot_stat)
-    # s.query(Bots).update().values(bot_stat=new_bot_stat).where(Bots.bot_tg_id == int(bot_tg_id))
-    # print(Bots.bot_stat)
     s.commit()
