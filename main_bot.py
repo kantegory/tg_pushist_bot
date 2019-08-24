@@ -709,6 +709,7 @@ def got_payment(message):
     user_tg_id = str(message.from_user.id)
 
     curr_user_payments = select_payment(user_tg_id)
+    user_refs = select_user_by_refer_name(message.from_user.username)
 
     last_payment_end_date = None
 
@@ -717,6 +718,18 @@ def got_payment(message):
         for _payment in curr_user_payments:
 
             last_payment_end_date = _payment['payment_end_date']
+
+    if user_refs:
+
+        for _ref in user_refs:
+
+            _ref_id = _ref['user_tg_id']
+            _ref_pays = select_payment(_ref_id)
+
+            if _ref_pays:
+
+                last_payment_end_date = last_payment_end_date.split('.')
+                last_payment_end_date = [last_payment_end_date[0], str(int(last_payment_end_date[1] + 1)), last_payment_end_date[2]]
 
     curr_date = last_payment_end_date if last_payment_end_date is not None else datetime.datetime.now().strftime('%d.%m.%Y')
 
