@@ -12,7 +12,7 @@ from googletrans import Translator
 telebot.apihelper.proxy = {'https': 'socks5://USERPROXY:PASSWORD@IP:PORT'}
 token = 'TOKEN'
 bot = telebot.TeleBot(token)
-admin = ['alantsoff', 'kantegory']
+admin = ['PUT THIS YOUR TG LOGIN TO SHOW SOME ADDITION FUNCTIONAL']
 threads_bot = []
 main_bot_stat = []
 users = []
